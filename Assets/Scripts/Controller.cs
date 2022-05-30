@@ -6,8 +6,27 @@ public class Controller : MonoBehaviour
 {
     public float speed = 10.0f;
     public float jumpForce = 10.0f;
+    public int wallJumpCountLimit = 1;
 
     private bool isGrounded = true;
+    private int wallJumpCount = 0;
+    
+    public Transform upperLeftCorner;
+    public Transform upperRightCorner;
+    public Transform lowerLeftCorner;
+    public Transform lowerRightCorner;
+
+    bool getIsTouchingWall(Transform pos) {
+        return Physics2D.Linecast(pos.position,
+            transform.position + Vector3.right * 0.2f, 1 << LayerMask.NameToLayer("Ground")) || 
+            Physics2D.Linecast(transform.position,
+            transform.position + Vector3.left * 0.2f, 1 << LayerMask.NameToLayer("Ground"));
+    }
+
+    bool getIsTouchingGround(Transform pos) {
+        return Physics2D.Linecast(pos.position,
+            transform.position + Vector3.down * 0.7f, 1 << LayerMask.NameToLayer("Ground"));
+    }
 
     // Update is called once per frame
     void FixedUpdate()
@@ -25,8 +44,19 @@ public class Controller : MonoBehaviour
             isGrounded = false;
         }
         // check if object is grounded
-        isGrounded = Physics2D.Linecast(transform.position,
-            transform.position + Vector3.down * 0.7f, 1 << LayerMask.NameToLayer("Ground"));
-        
+        isGrounded = getIsTouchingGround(lowerLeftCorner) || getIsTouchingGround(lowerRightCorner);
+        if (isGrounded) {
+            wallJumpCount = 0;
+        }
+
+        // check if object is on wall
+        bool isTouchingWall = getIsTouchingWall(upperLeftCorner) || getIsTouchingWall(upperRightCorner) ||
+            getIsTouchingWall(lowerLeftCorner) || getIsTouchingWall(lowerRightCorner);
+
+        if (Input.GetKeyDown(KeyCode.Space) && !isGrounded && wallJumpCount < wallJumpCountLimit && isTouchingWall)
+        {
+            GetComponent<Rigidbody2D>().AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            wallJumpCount++;
+        }
     }
 }
