@@ -60,9 +60,11 @@ public class Controller : MonoBehaviour
         bool isTouchingWall = getIsTouchingWall(upperLeftCorner) && getIsTouchingWall(upperRightCorner) ||
             getIsTouchingWall(lowerLeftCorner) && getIsTouchingWall(lowerRightCorner);
 
-        Debug.Log(isTouchingWall);
+
         if (Input.GetKeyDown(KeyCode.Space) && !isGrounded && wallJumpCount < wallJumpCountLimit && isTouchingWall)
         {
+            // set vertical velocity to 0
+            GetComponent<Rigidbody2D>().velocity = new Vector2(GetComponent<Rigidbody2D>().velocity.x, 0.0f);
             GetComponent<Rigidbody2D>().AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             wallJumpCount++;
             Debug.Log(wallJumpCount);
