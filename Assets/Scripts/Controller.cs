@@ -16,11 +16,17 @@ public class Controller : MonoBehaviour
     public Transform lowerLeftCorner;
     public Transform lowerRightCorner;
 
-    bool getIsTouchingWall(Transform pos) {
+    bool getIsTouchingLeftWall(Transform pos) {
         return Physics2D.Linecast(pos.position,
-            transform.position + Vector3.right * 0.2f, 1 << LayerMask.NameToLayer("Ground")) || 
-            Physics2D.Linecast(transform.position,
-            transform.position + Vector3.left * 0.2f, 1 << LayerMask.NameToLayer("Ground"));
+            transform.position + Vector3.left * 0.7f, 1 << LayerMask.NameToLayer("Ground"));
+    }
+    bool getIsTouchingRightWall(Transform pos) {
+        return Physics2D.Linecast(pos.position,
+            transform.position + Vector3.right * 0.7f, 1 << LayerMask.NameToLayer("Ground"));
+    }
+
+    bool getIsTouchingWall(Transform pos) {
+        return getIsTouchingLeftWall(pos) || getIsTouchingRightWall(pos);
     }
 
     bool getIsTouchingGround(Transform pos) {
@@ -29,34 +35,37 @@ public class Controller : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
-    {
-        float moveHorizontal = Input.GetAxis("Horizontal");
-        // translate object
-        Vector2 movement = new Vector2(moveHorizontal, 0.0f);
-        transform.Translate(movement * speed);
-    }
     void Update()
     {
+
+        float moveHorizontal = Input.GetAxisRaw("Horizontal");
+        
+
+        // translate object
+        Vector2 movement = new Vector2(moveHorizontal, 0.0f);
+        GetComponent<Rigidbody2D>().velocity = new Vector2(movement.x * speed, GetComponent<Rigidbody2D>().velocity.y);     
+
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
             GetComponent<Rigidbody2D>().AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             isGrounded = false;
         }
-        // check if object is grounded
+
         isGrounded = getIsTouchingGround(lowerLeftCorner) || getIsTouchingGround(lowerRightCorner);
         if (isGrounded) {
             wallJumpCount = 0;
         }
 
         // check if object is on wall
-        bool isTouchingWall = getIsTouchingWall(upperLeftCorner) || getIsTouchingWall(upperRightCorner) ||
-            getIsTouchingWall(lowerLeftCorner) || getIsTouchingWall(lowerRightCorner);
+        bool isTouchingWall = getIsTouchingWall(upperLeftCorner) && getIsTouchingWall(upperRightCorner) ||
+            getIsTouchingWall(lowerLeftCorner) && getIsTouchingWall(lowerRightCorner);
 
+        Debug.Log(isTouchingWall);
         if (Input.GetKeyDown(KeyCode.Space) && !isGrounded && wallJumpCount < wallJumpCountLimit && isTouchingWall)
         {
             GetComponent<Rigidbody2D>().AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             wallJumpCount++;
+            Debug.Log(wallJumpCount);
         }
     }
 }
